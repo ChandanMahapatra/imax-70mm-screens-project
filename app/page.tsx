@@ -21,7 +21,7 @@ type Screen = {
  * 1100ms   annotation and legend color settle with the screen
  */
 const TIMING = {
-  screenTransition: 1100,
+  screenTransition: 500,
 };
 
 const SCREEN_COLORS = ["#5f84ff", "#55e4db", "#c7ff4a", "#ff6f91", "#ff9f43"];
@@ -67,7 +67,7 @@ const screens: Screen[] = [
   { id: "indianapolis", country: "United States", region: "Indiana", city: "Indianapolis", name: "IMAX, Indiana State Museum", width: 25.6, height: 19.2 },
   { id: "grand-rapids", country: "United States", region: "Michigan", city: "Grand Rapids", name: "Celebration! Cinema Grand Rapids North & IMAX", width: 21.3, height: 16.1 },
   { id: "las-vegas", country: "United States", region: "Nevada", city: "Las Vegas", name: "Brenden Palms 14 & IMAX", width: 17.1, height: 12.5 },
-  { id: "lincoln", country: "United States", region: "New York", city: "New York", name: "AMC Lincoln Square 13 & IMAX", width: 30.8, height: 23, source: "https://www.timeout.com/newyork/movie-theaters/amc-loews-lincoln-square-13" },
+  { id: "lincoln", country: "United States", region: "New York", city: "New York", name: "AMC Lincoln Square 13 & IMAX", width: 30.78, height: 23.04, source: "https://www.timeout.com/newyork/movie-theaters/amc-loews-lincoln-square-13" },
   { id: "rochester", country: "United States", region: "New York", city: "Rochester", name: "Cinemark Tinseltown Rochester & IMAX", width: 21.3, height: 16.1 },
   { id: "king-of-prussia", country: "United States", region: "Pennsylvania", city: "King of Prussia", name: "Regal UA King of Prussia & IMAX", width: 22.3, height: 15.9 },
   { id: "providence", country: "United States", region: "Rhode Island", city: "Providence", name: "Apple Cinemas Providence Place & IMAX", width: 24.7, height: 18.6 },
@@ -81,10 +81,15 @@ function formatFeet(metres: number) {
   return (metres * 3.28084).toFixed(1);
 }
 
+function formatMetres(metres: number) {
+  return Number.isInteger(metres * 10) ? metres.toFixed(1) : metres.toFixed(2);
+}
+
 function useDismiss(
   isOpen: boolean,
   setOpen: (value: boolean) => void,
   ref: React.RefObject<HTMLDivElement | null>,
+  triggerRef: React.RefObject<HTMLButtonElement | null>,
 ) {
   useEffect(() => {
     if (!isOpen) return;
@@ -92,7 +97,10 @@ function useDismiss(
       if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     };
     document.addEventListener("pointerdown", closeOnOutside);
     document.addEventListener("keydown", closeOnEscape);
@@ -100,7 +108,7 @@ function useDismiss(
       document.removeEventListener("pointerdown", closeOnOutside);
       document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [isOpen, setOpen, ref]);
+  }, [isOpen, setOpen, ref, triggerRef]);
 }
 
 export default function Home() {
@@ -109,14 +117,22 @@ export default function Home() {
     [],
   );
   const [country, setCountry] = useState("United States");
-  const [selectedIds, setSelectedIds] = useState(["lincoln", "bfi", "melbourne"]);
+  const [selectedIds, setSelectedIds] = useState([
+    "hollywood",
+    "irvine",
+    "la-live",
+    "ontario",
+    "citywalk",
+  ]);
   const [countryOpen, setCountryOpen] = useState(false);
   const [screensOpen, setScreensOpen] = useState(false);
   const countryRef = useRef<HTMLDivElement>(null);
   const screensRef = useRef<HTMLDivElement>(null);
+  const countryTriggerRef = useRef<HTMLButtonElement>(null);
+  const screensTriggerRef = useRef<HTMLButtonElement>(null);
 
-  useDismiss(countryOpen, setCountryOpen, countryRef);
-  useDismiss(screensOpen, setScreensOpen, screensRef);
+  useDismiss(countryOpen, setCountryOpen, countryRef, countryTriggerRef);
+  useDismiss(screensOpen, setScreensOpen, screensRef, screensTriggerRef);
 
   const countryScreens = screens.filter((screen) => screen.country === country);
   const selected = selectedIds
@@ -125,6 +141,16 @@ export default function Home() {
   const smallestSelectedArea = selected.length
     ? Math.min(...selected.map((screen) => screen.width * screen.height))
     : 0;
+  const shortestSelectedHeight = selected.length
+    ? Math.min(...selected.map((screen) => screen.height))
+    : 0;
+  const tallestSelectedHeight = selected.length
+    ? Math.max(...selected.map((screen) => screen.height))
+    : 0;
+  const heightDifference = tallestSelectedHeight - shortestSelectedHeight;
+  const screensByArea = [...selected].sort(
+    (a, b) => b.width * b.height - a.width * a.height,
+  );
   const groups = countryScreens.reduce<Record<string, Screen[]>>((acc, screen) => {
     (acc[screen.region] ??= []).push(screen);
     return acc;
@@ -145,7 +171,7 @@ export default function Home() {
           IMAX 70<span>mm Screens</span>
         </a>
         <a className="source-link" href={IMAX_LIST} target="_blank" rel="noreferrer">
-          IMAX theatre list ↗
+          Official IMAX theatre list ↗
         </a>
       </header>
 
@@ -160,30 +186,31 @@ export default function Home() {
 
         <div className="controls" aria-label="Choose theatres to compare">
           <div className="picker" ref={countryRef}>
-            <span className="control-label">01 / COUNTRY</span>
+            <span className="control-label">01 / Country</span>
             <button
               className="picker-trigger"
               type="button"
-              aria-haspopup="listbox"
               aria-expanded={countryOpen}
+              aria-controls="country-menu"
               onClick={() => setCountryOpen((open) => !open)}
+              ref={countryTriggerRef}
               data-testid="country-trigger"
             >
               <span>{country}</span>
               <i aria-hidden="true" />
             </button>
             {countryOpen && (
-              <div className="picker-menu country-menu" role="listbox" aria-label="Country">
+              <div className="picker-menu country-menu" id="country-menu" aria-label="Country">
                 {countries.map((item) => (
                   <button
                     key={item}
                     type="button"
-                    role="option"
-                    aria-selected={country === item}
+                    aria-pressed={country === item}
                     className={country === item ? "active" : ""}
                     onClick={() => {
                       setCountry(item);
                       setCountryOpen(false);
+                      countryTriggerRef.current?.focus();
                     }}
                   >
                     <span>{item}</span>
@@ -195,20 +222,21 @@ export default function Home() {
           </div>
 
           <div className="picker" ref={screensRef}>
-            <span className="control-label">02 / SCREENS</span>
+            <span className="control-label">02 / Screens</span>
             <button
               className="picker-trigger"
               type="button"
-              aria-haspopup="dialog"
               aria-expanded={screensOpen}
+              aria-controls="screen-menu"
               onClick={() => setScreensOpen((open) => !open)}
+              ref={screensTriggerRef}
               data-testid="screens-trigger"
             >
               <span>{selected.length} of {MAX_SELECTIONS} selected</span>
               <i aria-hidden="true" />
             </button>
             {screensOpen && (
-              <div className="picker-menu screen-menu" role="dialog" aria-label={`Screens in ${country}`}>
+              <div className="picker-menu screen-menu" id="screen-menu" aria-label={`Screens in ${country}`}>
                 <div className="menu-head">
                   <b>{country}</b>
                   <span>{countryScreens.length} locations · choose up to {MAX_SELECTIONS}</span>
@@ -246,7 +274,15 @@ export default function Home() {
                 </div>
                 <div className="menu-foot">
                   <span>{selected.length === MAX_SELECTIONS ? "Maximum reached" : `${MAX_SELECTIONS - selected.length} slots remaining`}</span>
-                  <button type="button" onClick={() => setScreensOpen(false)}>Done</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScreensOpen(false);
+                      screensTriggerRef.current?.focus();
+                    }}
+                  >
+                    Done
+                  </button>
                 </div>
               </div>
             )}
@@ -257,8 +293,15 @@ export default function Home() {
       <section className="stage" aria-live="polite">
         <div className="stage-head">
           <div>
-            <span className="index">OVERLAY COMPARISON</span>
+            <span className="index">Overlay comparison</span>
             <h2>{selected.length ? `${selected.length} screens · true physical scale` : "Choose a screen to begin"}</h2>
+            {selected.length > 1 && (
+              <p className="height-summary">
+                Height range
+                <strong>{formatMetres(shortestSelectedHeight)}–{formatMetres(tallestSelectedHeight)} m</strong>
+                <span>{formatMetres(heightDifference)} m difference</span>
+              </p>
+            )}
           </div>
           <button
             className="clear-button"
@@ -284,7 +327,8 @@ export default function Home() {
                 ))}
               </div>
 
-              {selected.map((screen, index) => {
+              {screensByArea.map((screen, stackIndex) => {
+                const index = selected.findIndex((item) => item.id === screen.id);
                 const color = SCREEN_COLORS[index];
                 return (
                   <div
@@ -293,21 +337,45 @@ export default function Home() {
                     style={{
                       "--screen-color": color,
                       "--measure-lane": `${index * 9}px`,
+                      "--height-measure-lane": `${index * 26}px`,
                       width: `${(screen.width / MAX_W) * 100}%`,
                       height: `${(screen.height / MAX_H) * 100}%`,
-                      zIndex: selected.length - index,
+                      zIndex: stackIndex + 1,
                     } as React.CSSProperties}
                     data-testid={`overlay-${screen.id}`}
                   >
                     <div className="screen-measure screen-measure-width" aria-hidden="true">
-                      <span>{screen.width.toFixed(1)} m</span>
+                      <span>{formatMetres(screen.width)} m</span>
                     </div>
                     <div className="screen-measure screen-measure-height" aria-hidden="true">
-                      <span>{screen.height.toFixed(1)} m</span>
+                      <span>{formatMetres(screen.height)} m</span>
                     </div>
                   </div>
                 );
               })}
+
+              <div className="height-guides" aria-hidden="true">
+                {selected.map((screen, index) => {
+                  const difference = screen.height - shortestSelectedHeight;
+                  return (
+                    <div
+                      className="height-guide"
+                      key={screen.id}
+                      style={{
+                        "--screen-color": SCREEN_COLORS[index],
+                        "--guide-lane": `${index * 22}px`,
+                        bottom: `${(screen.height / MAX_H) * 100}%`,
+                        left: `${50 + (screen.width / MAX_W) * 50}%`,
+                      } as React.CSSProperties}
+                    >
+                      <span>
+                        {formatMetres(screen.height)} m
+                        {difference > 0 ? ` · +${formatMetres(difference)} m` : " · baseline"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
 
               <div className="plot-labels">
                 {selected.map((screen, index) => {
@@ -326,7 +394,7 @@ export default function Home() {
                     >
                       <b>{screen.city}</b>
                       <strong>{(screen.width / screen.height).toFixed(2)}:1</strong>
-                      <span>{screen.width.toFixed(1)} × {screen.height.toFixed(1)} m</span>
+                      <span>{formatMetres(screen.width)} × {formatMetres(screen.height)} m</span>
                       <em>
                         {Math.round(area)} m²
                         {areaDifference > 0 ? ` · +${areaDifference}% area` : " · smallest"}
@@ -365,7 +433,7 @@ export default function Home() {
                 <small>{screen.city}, {screen.country}</small>
               </div>
               <strong>
-                {screen.width.toFixed(1)} × {screen.height.toFixed(1)} m
+                {formatMetres(screen.width)} × {formatMetres(screen.height)} m
                 {" · "}
                 {Math.round(screen.width * screen.height)} m²
               </strong>
