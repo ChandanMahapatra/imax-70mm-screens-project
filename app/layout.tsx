@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,38 +12,38 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("host") ?? "localhost:3000";
-  const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
-  const protocol = forwardedProtocol ?? (host.includes("localhost") ? "http" : "https");
-  const origin = `${protocol}://${host}`;
-  const title = "IMAX 70mm Screens — The Odyssey";
-  const description =
-    "Compare verified physical screen dimensions for theatres presenting The Odyssey in IMAX 70mm.";
+const siteUrl = new URL(
+  process.env.NEXT_PUBLIC_SITE_URL ??
+    "https://chandanmahapatra.github.io/imax-70mm-screens-project/",
+);
+const faviconUrl = new URL("favicon.svg", siteUrl);
+const socialImageUrl = new URL("og.png", siteUrl);
+const title = "IMAX 70mm Screens — The Odyssey";
+const description =
+  "Compare verified physical screen dimensions for theatres presenting The Odyssey in IMAX 70mm.";
 
-  return {
+export const metadata: Metadata = {
+  metadataBase: siteUrl,
+  title,
+  description,
+  icons: {
+    icon: faviconUrl,
+    shortcut: faviconUrl,
+  },
+  openGraph: {
     title,
     description,
-    icons: {
-      icon: "/favicon.svg",
-      shortcut: "/favicon.svg",
-    },
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      url: origin,
-      images: [{ url: `${origin}/og.png`, width: 1730, height: 909, alt: title }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [`${origin}/og.png`],
-    },
-  };
-}
+    type: "website",
+    url: siteUrl,
+    images: [{ url: socialImageUrl, width: 1730, height: 909, alt: title }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [socialImageUrl],
+  },
+};
 
 export default function RootLayout({
   children,
