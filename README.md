@@ -3,6 +3,8 @@
 An interactive, true-scale comparison of physical IMAX screen dimensions for
 theatres presenting *The Odyssey* in IMAX 70mm.
 
+[View the live GitHub Pages app](https://chandanmahapatra.github.io/imax-70mm-screens-project/)
+
 ![IMAX 70mm Screens interface](public/app-screenshot.jpg)
 
 ## What the app does
@@ -54,8 +56,12 @@ Open the local URL printed by the development server.
 
 ```bash
 npm run build
+npm run build:pages
 npm run lint
 ```
+
+Pushes to `main` automatically build the static site and publish it from the
+`gh-pages` branch.
 
 ## Project structure
 
