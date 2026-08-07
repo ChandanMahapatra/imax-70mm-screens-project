@@ -3,9 +3,7 @@
 An interactive, true-scale comparison of physical IMAX screen dimensions for
 theatres presenting *The Odyssey* in IMAX 70mm.
 
-[View the live GitHub Pages app](https://chandanmahapatra.github.io/imax-70mm-screens-project/)
-
-![IMAX 70mm Screens interface](public/app-screenshot.jpg)
+![IMAX 70mm Screens interface](public/app-screenshot.png)
 
 ## What the app does
 
@@ -39,7 +37,14 @@ so screens with similar dimensions may have outlines that nearly overlap.
 - vinext and Vite
 - TypeScript
 - Tailwind CSS 4 with project-level CSS
+- Lucide React icons
 - Cloudflare Workers-compatible output
+
+## Design
+
+The interface follows the ClickHouse-inspired system documented in
+[`DESIGN.md`](DESIGN.md): near-black surfaces, white typography, and electric
+yellow accents. Individual screen colors are reserved for comparison data.
 
 ## Run locally
 
@@ -56,12 +61,8 @@ Open the local URL printed by the development server.
 
 ```bash
 npm run build
-npm run build:pages
 npm run lint
 ```
-
-Pushes to `main` automatically build the static site and publish it from the
-`gh-pages` branch.
 
 ## Project structure
 
@@ -71,6 +72,7 @@ app/
   page.tsx         Screen data and comparison interface
   globals.css      Layout, chart, controls, and responsive styles
 public/
-  app-screenshot.jpg
+  app-screenshot.png
   og.png
+DESIGN.md            ClickHouse-inspired visual system and tokens
 ```

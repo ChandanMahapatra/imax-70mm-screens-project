@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonStanding } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Screen = {
@@ -173,7 +174,7 @@ export default function Home() {
 
       <section className="hero" id="top">
         <div>
-          <h1>IMAX 70mm Screens</h1>
+          <h1>IMAX <span>70mm</span> Screens</h1>
           <p className="intro">
             Compare up to five physical screen sizes from every theatre on the
             current Odyssey IMAX 70mm list.
@@ -404,14 +405,7 @@ export default function Home() {
 
               <div className="human-scale" aria-label="Human figure representing 1.8 metres">
                 <span className="human-label">1.8 m</span>
-                <div className="human">
-                  <i className="head" />
-                  <i className="torso" />
-                  <i className="arm left" />
-                  <i className="arm right" />
-                  <i className="leg left" />
-                  <i className="leg right" />
-                </div>
+                <PersonStanding className="human-icon" strokeWidth={2.2} aria-hidden="true" />
               </div>
             </div>
             <div className="x-axis" aria-hidden="true">
