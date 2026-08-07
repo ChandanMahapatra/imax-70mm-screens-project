@@ -77,10 +77,6 @@ const screens: Screen[] = [
   { id: "san-antonio", country: "United States", region: "Texas", city: "San Antonio", name: "AMC Rivercenter 11 & IMAX", width: 21.3, height: 16.1 },
 ];
 
-function formatFeet(metres: number) {
-  return (metres * 3.28084).toFixed(1);
-}
-
 function formatMetres(metres: number) {
   return Number.isInteger(metres * 10) ? metres.toFixed(1) : metres.toFixed(2);
 }
@@ -171,7 +167,7 @@ export default function Home() {
           IMAX 70<span>mm Screens</span>
         </a>
         <a className="source-link" href={IMAX_LIST} target="_blank" rel="noreferrer">
-          Official IMAX theatre list ↗
+          <span className="source-prefix">Official&nbsp;</span>IMAX theatre list ↗
         </a>
       </header>
 
@@ -369,8 +365,10 @@ export default function Home() {
                       } as React.CSSProperties}
                     >
                       <span>
-                        {formatMetres(screen.height)} m
-                        {difference > 0 ? ` · +${formatMetres(difference)} m` : " · baseline"}
+                        <b>{formatMetres(screen.height)} m</b>
+                        <em>
+                          {difference > 0 ? ` · +${formatMetres(difference)} m` : " · baseline"}
+                        </em>
                       </span>
                     </div>
                   );
