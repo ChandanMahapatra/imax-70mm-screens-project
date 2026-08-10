@@ -161,10 +161,12 @@ export default function Home() {
     });
   }
 
+  const { t } = useTranslation();
+
   return (
     <main style={{ "--screen-duration": `${TIMING.screenTransition}ms` } as React.CSSProperties}>
       <header className="topbar">
-        <a className="wordmark" href="#top" aria-label="IMAX 70mm Screens home">
+        <a className="wordmark" href="#top" aria-label={t('page.wordmark.home_aria_label', { siteName: 'IMAX 70mm Screens' })}>
           IMAX 70<span>mm Screens</span>
         </a>
         <a className="source-link" href={IMAX_LIST} target="_blank" rel="noreferrer">
