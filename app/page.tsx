@@ -165,7 +165,7 @@ export default function Home() {
     <main style={{ "--screen-duration": `${TIMING.screenTransition}ms` } as React.CSSProperties}>
       <header className="topbar">
         <a className="wordmark" href="#top" aria-label="IMAX 70mm Screens home">
-          IMAX 70<span>mm Screens</span>
+          <Trans i18nKey="home.wordmark">IMAX 70<span>mm Screens</span></Trans>
         </a>
         <a className="source-link" href={IMAX_LIST} target="_blank" rel="noreferrer">
           <span className="source-prefix">Official&nbsp;</span>IMAX theatre list ↗
