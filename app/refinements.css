@@ -1,0 +1,277 @@
+/* Review-driven refinements: preserve the existing ClickHouse-inspired system while
+   reducing annotation competition and keeping comparison identity readable on small screens. */
+
+/* Let theatre names remain discoverable before selection instead of clipping them. */
+.option-copy small {
+  overflow: visible;
+  display: -webkit-box;
+  line-height: 1.35;
+  text-overflow: clip;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Give every selected screen a persistent non-colour identifier. */
+.plot-labels,
+.legend {
+  counter-reset: selected-screen;
+}
+
+.screen-label,
+.legend article {
+  counter-increment: selected-screen;
+}
+
+.screen-label::before,
+.legend article::before {
+  content: counter(selected-screen, decimal-leading-zero);
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  color: var(--night);
+  background: var(--screen-color, var(--primary));
+  border-radius: 4px;
+  font: 800 12px/1 var(--font-geist-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.screen-label {
+  grid-template-columns: 24px auto auto minmax(0, 1fr);
+  column-gap: 8px;
+}
+
+.screen-label::before {
+  grid-row: 1 / 3;
+}
+
+.screen-label b {
+  grid-column: 2;
+}
+
+.screen-label strong {
+  grid-column: 3;
+}
+
+.screen-label span,
+.screen-label em {
+  grid-column: 4;
+}
+
+.legend article::before {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  color: var(--night);
+  background: var(--primary);
+}
+
+.legend-swatch {
+  position: absolute;
+  left: 18px;
+  bottom: 14px;
+}
+
+.legend article {
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+/* The legend carries the detailed specs, so measurement scaffolding can recede. */
+.screen-measure {
+  opacity: .62;
+}
+
+.height-guide {
+  opacity: .72;
+}
+
+.gridlines i {
+  opacity: .72;
+}
+
+/* Keep analytical text on the project's established 12/14px type steps. */
+.height-summary,
+.height-summary strong,
+.y-axis,
+.x-axis,
+.height-guide span,
+.empty-state,
+footer {
+  font-size: 12px;
+}
+
+.index,
+.control-label,
+.region-group h3,
+.menu-head span,
+.menu-foot span,
+.option-size,
+.legend small {
+  font-size: 12px;
+}
+
+/* Secondary legend content should support the chart, not compete with it. */
+.legend article {
+  min-height: 92px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.legend b {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.legend strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .intro {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .control-label,
+  .index {
+    font-size: 12px;
+  }
+
+  .picker-trigger {
+    font-size: 14px;
+  }
+
+  .screen-option {
+    min-height: 72px;
+    align-items: start;
+  }
+
+  .option-copy b {
+    font-size: 14px;
+  }
+
+  .option-copy small {
+    font-size: 12px;
+  }
+
+  .stage-head {
+    align-items: start;
+  }
+
+  .stage h2 {
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  .height-summary,
+  .height-summary strong {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .chart {
+    padding-top: 64px;
+  }
+
+  /* Preserve screen identity on mobile instead of removing the label system. */
+  .plot-labels {
+    display: flex;
+    position: absolute;
+    inset: -52px 0 auto;
+    gap: 6px;
+    z-index: 20;
+  }
+
+  .screen-label {
+    position: static;
+    min-width: 0;
+    min-height: 34px;
+    padding: 5px 6px;
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid var(--line);
+    background: var(--panel-raised);
+  }
+
+  .screen-label::before {
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
+    color: var(--night);
+    background: var(--screen-color);
+    font-size: 12px;
+  }
+
+  .screen-label b {
+    display: block;
+    max-width: none;
+    overflow: hidden;
+    color: #e6e6e6;
+    font-size: 12px;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .screen-label strong,
+  .screen-label span,
+  .screen-label em {
+    display: none;
+  }
+
+  .height-guide span,
+  .y-axis,
+  .x-axis,
+  .human-label {
+    font-size: 12px;
+  }
+
+  .legend article {
+    min-height: 92px;
+  }
+
+  footer {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .plot-labels {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .screen-label {
+    justify-content: center;
+    padding-inline: 3px;
+  }
+
+  .screen-label b {
+    display: none;
+  }
+
+  .stage-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .clear-button {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 360px) {
+  .stage h2 {
+    font-size: 18px;
+  }
+
+  .height-summary,
+  .height-summary strong {
+    font-size: 12px;
+  }
+}
