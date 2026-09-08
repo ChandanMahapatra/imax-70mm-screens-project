@@ -4,19 +4,17 @@ on:
   push:
     branches:
       - main
-      - design/refine-comparison-ui
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: github-pages-${{ github.ref }}
+  group: github-pages
   cancel-in-progress: true
 
 jobs:
   build-and-publish:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -50,73 +48,3 @@ jobs:
           git add --all
           git commit -m "Deploy ${GITHUB_SHA}"
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
-
-  capture-visual-comparison:
-    if: github.ref == 'refs/heads/design/refine-comparison-ui'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out PR branch
-        uses: actions/checkout@v4
-        with:
-          path: after
-
-      - name: Check out main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: before
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            before/package-lock.json
-            after/package-lock.json
-
-      - name: Build baseline
-        working-directory: before
-        run: |
-          npm ci
-          npm run build:pages
-
-      - name: Build PR version
-        working-directory: after
-        run: |
-          npm ci
-          npm run build:pages
-
-      - name: Prepare local preview roots
-        run: |
-          mkdir -p /tmp/before-root/imax-70mm-screens-project
-          mkdir -p /tmp/after-root/imax-70mm-screens-project
-          cp -R before/out/. /tmp/before-root/imax-70mm-screens-project/
-          cp -R after/out/. /tmp/after-root/imax-70mm-screens-project/
-          mkdir -p captures
-
-      - name: Start local servers
-        run: |
-          python3 -m http.server 4173 --directory /tmp/before-root >/tmp/before-server.log 2>&1 &
-          python3 -m http.server 4174 --directory /tmp/after-root >/tmp/after-server.log 2>&1 &
-          sleep 2
-          curl --fail http://127.0.0.1:4173/imax-70mm-screens-project/ >/dev/null
-          curl --fail http://127.0.0.1:4174/imax-70mm-screens-project/ >/dev/null
-
-      - name: Capture matched screenshots
-        run: |
-          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
-          "$CHROME" --headless --no-sandbox --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=1600 --window-size=1440,1100 --screenshot=captures/desktop-before.png http://127.0.0.1:4173/imax-70mm-screens-project/
-          "$CHROME" --headless --no-sandbox --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=1600 --window-size=1440,1100 --screenshot=captures/desktop-after.png http://127.0.0.1:4174/imax-70mm-screens-project/
-          "$CHROME" --headless --no-sandbox --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=1600 --window-size=390,844 --screenshot=captures/mobile-before.png http://127.0.0.1:4173/imax-70mm-screens-project/
-          "$CHROME" --headless --no-sandbox --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=1600 --window-size=390,844 --screenshot=captures/mobile-after.png http://127.0.0.1:4174/imax-70mm-screens-project/
-          file captures/*.png
-
-      - name: Upload visual comparison
-        uses: actions/upload-artifact@v4
-        with:
-          name: before-after-screenshots
-          path: captures/*.png
-          if-no-files-found: error
-          retention-days: 7
