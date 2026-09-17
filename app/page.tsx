@@ -1,6 +1,6 @@
 "use client";
 
-import { PersonStanding } from "lucide-react";
+import { ExternalLink, PersonStanding } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Screen = {
@@ -13,6 +13,8 @@ type Screen = {
   height: number;
   source?: string;
 };
+
+type UnitSystem = "metric" | "imperial";
 
 /*
  * ANIMATION STORYBOARD
@@ -33,6 +35,8 @@ const X_TICKS = [0, 8, 16, 24, 32];
 const Y_TICKS = [0, 5, 10, 15, 20, 25, 30];
 const IMAX_LIST = "https://www.imax.com/movie/the-odyssey";
 const LF_SOURCE = "https://lfexaminer.com/theaters/";
+const METRES_TO_FEET = 3.28084;
+const SQUARE_METRES_TO_SQUARE_FEET = 10.7639;
 
 const screens: Screen[] = [
   { id: "melbourne", country: "Australia", region: "Victoria", city: "Melbourne", name: "IMAX Melbourne", width: 32, height: 23, source: "https://imaxmelbourne.com.au/about_imax/the_imax_difference/" },
@@ -78,8 +82,22 @@ const screens: Screen[] = [
   { id: "san-antonio", country: "United States", region: "Texas", city: "San Antonio", name: "AMC Rivercenter 11 & IMAX", width: 21.3, height: 16.1 },
 ];
 
-function formatMetres(metres: number) {
+function formatLength(metres: number, unitSystem: UnitSystem) {
+  if (unitSystem === "imperial") return (metres * METRES_TO_FEET).toFixed(1);
   return Number.isInteger(metres * 10) ? metres.toFixed(1) : metres.toFixed(2);
+}
+
+function formatArea(squareMetres: number, unitSystem: UnitSystem) {
+  const area = unitSystem === "imperial"
+    ? squareMetres * SQUARE_METRES_TO_SQUARE_FEET
+    : squareMetres;
+  return Math.round(area).toLocaleString("en-US");
+}
+
+function formatAxisLength(metres: number, unitSystem: UnitSystem) {
+  return unitSystem === "imperial"
+    ? Math.round(metres * METRES_TO_FEET)
+    : metres;
 }
 
 function useDismiss(
@@ -121,6 +139,7 @@ export default function Home() {
     "ontario",
     "citywalk",
   ]);
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [countryOpen, setCountryOpen] = useState(false);
   const [screensOpen, setScreensOpen] = useState(false);
   const countryRef = useRef<HTMLDivElement>(null);
@@ -145,6 +164,8 @@ export default function Home() {
     ? Math.max(...selected.map((screen) => screen.height))
     : 0;
   const heightDifference = tallestSelectedHeight - shortestSelectedHeight;
+  const lengthUnit = unitSystem === "metric" ? "m" : "ft";
+  const areaUnit = unitSystem === "metric" ? "m²" : "ft²";
   const screensByArea = [...selected].sort(
     (a, b) => b.width * b.height - a.width * a.height,
   );
@@ -168,7 +189,8 @@ export default function Home() {
           IMAX 70<span>mm Screens</span>
         </a>
         <a className="source-link" href={IMAX_LIST} target="_blank" rel="noreferrer">
-          <span className="source-prefix">Official&nbsp;</span>IMAX theatre list ↗
+          <span><span className="source-prefix">Official&nbsp;</span>IMAX theatre list</span>
+          <ExternalLink aria-hidden="true" />
         </a>
       </header>
 
@@ -262,7 +284,9 @@ export default function Home() {
                               <b>{screen.city}</b>
                               <small>{screen.name}</small>
                             </span>
-                            <span className="option-size">{screen.width} × {screen.height} m</span>
+                            <span className="option-size">
+                              {formatLength(screen.width, unitSystem)} × {formatLength(screen.height, unitSystem)} {lengthUnit}
+                            </span>
                           </label>
                         );
                       })}
@@ -295,26 +319,41 @@ export default function Home() {
             {selected.length > 1 && (
               <p className="height-summary">
                 Height range
-                <strong>{formatMetres(shortestSelectedHeight)}–{formatMetres(tallestSelectedHeight)} m</strong>
-                <span>{formatMetres(heightDifference)} m difference</span>
+                <strong>{formatLength(shortestSelectedHeight, unitSystem)}–{formatLength(tallestSelectedHeight, unitSystem)} {lengthUnit}</strong>
+                <span>{formatLength(heightDifference, unitSystem)} {lengthUnit} difference</span>
               </p>
             )}
           </div>
-          <button
-            className="clear-button"
-            type="button"
-            onClick={() => setSelectedIds([])}
-            disabled={!selected.length}
-          >
-            Clear all
-          </button>
+          <div className="stage-actions">
+            <label className="unit-select">
+              <span>Units</span>
+              <select
+                value={unitSystem}
+                onChange={(event) => setUnitSystem(event.target.value as UnitSystem)}
+                aria-label="Measurement units"
+              >
+                <option value="metric">Metric</option>
+                <option value="imperial">Imperial</option>
+              </select>
+            </label>
+            <button
+              className="clear-button"
+              type="button"
+              onClick={() => setSelectedIds([])}
+              disabled={!selected.length}
+            >
+              Clear all
+            </button>
+          </div>
         </div>
 
         <div className="chart">
           <div className="scale-frame">
             <div className="y-axis" aria-hidden="true">
               {Y_TICKS.map((tick) => (
-                <span key={tick} style={{ bottom: `${(tick / MAX_H) * 100}%` }}>{tick}m</span>
+                <span key={tick} style={{ bottom: `${(tick / MAX_H) * 100}%` }}>
+                  {formatAxisLength(tick, unitSystem)}{lengthUnit}
+                </span>
               ))}
             </div>
             <div className="plot">
@@ -342,10 +381,10 @@ export default function Home() {
                     data-testid={`overlay-${screen.id}`}
                   >
                     <div className="screen-measure screen-measure-width" aria-hidden="true">
-                      <span>{formatMetres(screen.width)} m</span>
+                      <span>{formatLength(screen.width, unitSystem)} {lengthUnit}</span>
                     </div>
                     <div className="screen-measure screen-measure-height" aria-hidden="true">
-                      <span>{formatMetres(screen.height)} m</span>
+                      <span>{formatLength(screen.height, unitSystem)} {lengthUnit}</span>
                     </div>
                   </div>
                 );
@@ -366,9 +405,9 @@ export default function Home() {
                       } as React.CSSProperties}
                     >
                       <span>
-                        <b>{formatMetres(screen.height)} m</b>
+                        <b>{formatLength(screen.height, unitSystem)} {lengthUnit}</b>
                         <em>
-                          {difference > 0 ? ` · +${formatMetres(difference)} m` : " · baseline"}
+                          {difference > 0 ? ` · +${formatLength(difference, unitSystem)} ${lengthUnit}` : " · baseline"}
                         </em>
                       </span>
                     </div>
@@ -393,9 +432,9 @@ export default function Home() {
                     >
                       <b>{screen.city}</b>
                       <strong>{(screen.width / screen.height).toFixed(2)}:1</strong>
-                      <span>{formatMetres(screen.width)} × {formatMetres(screen.height)} m</span>
+                      <span>{formatLength(screen.width, unitSystem)} × {formatLength(screen.height, unitSystem)} {lengthUnit}</span>
                       <em>
-                        {Math.round(area)} m²
+                        {formatArea(area, unitSystem)} {areaUnit}
                         {areaDifference > 0 ? ` · +${areaDifference}% area` : " · smallest"}
                       </em>
                     </div>
@@ -403,36 +442,46 @@ export default function Home() {
                 })}
               </div>
 
-              <div className="human-scale" aria-label="Human figure representing 1.8 metres">
-                <span className="human-label">1.8 m</span>
+              <div
+                className="human-scale"
+                aria-label={`Human figure representing ${formatLength(1.8, unitSystem)} ${unitSystem === "metric" ? "metres" : "feet"}`}
+              >
+                <span className="human-label">{formatLength(1.8, unitSystem)} {lengthUnit}</span>
                 <PersonStanding className="human-icon" strokeWidth={2.2} aria-hidden="true" />
               </div>
             </div>
             <div className="x-axis" aria-hidden="true">
               {X_TICKS.map((tick) => (
-                <span key={tick} style={{ left: `${(tick / MAX_W) * 100}%` }}>{tick}m</span>
+                <span key={tick} style={{ left: `${(tick / MAX_W) * 100}%` }}>
+                  {formatAxisLength(tick, unitSystem)}{lengthUnit}
+                </span>
               ))}
             </div>
           </div>
         </div>
 
         <div className="legend">
-          {selected.length ? selected.map((screen, index) => (
-            <article key={screen.id}>
-              <span className="legend-swatch" style={{ background: SCREEN_COLORS[index] }} />
-              <div>
-                <b>{screen.name}</b>
-                <small>{screen.city}, {screen.country}</small>
-              </div>
-              <strong>
-                {formatMetres(screen.width)} × {formatMetres(screen.height)} m
-                {" · "}
-                {Math.round(screen.width * screen.height)} m²
-              </strong>
-              <a href={screen.source ?? LF_SOURCE} target="_blank" rel="noreferrer" aria-label={`Source for ${screen.name}`}>↗</a>
-              <button type="button" onClick={() => toggleScreen(screen.id)} aria-label={`Remove ${screen.name}`}>×</button>
-            </article>
-          )) : (
+          {screensByArea.length ? screensByArea.map((screen) => {
+            const colorIndex = selected.findIndex((item) => item.id === screen.id);
+            return (
+              <article key={screen.id}>
+                <span className="legend-swatch" style={{ background: SCREEN_COLORS[colorIndex] }} />
+                <div>
+                  <b>{screen.name}</b>
+                  <small>{screen.city}, {screen.country}</small>
+                </div>
+                <strong>
+                  {formatLength(screen.width, unitSystem)} × {formatLength(screen.height, unitSystem)} {lengthUnit}
+                  {" · "}
+                  {formatArea(screen.width * screen.height, unitSystem)} {areaUnit}
+                </strong>
+                <a href={screen.source ?? LF_SOURCE} target="_blank" rel="noreferrer" aria-label={`Source for ${screen.name}`}>
+                  <ExternalLink aria-hidden="true" />
+                </a>
+                <button type="button" onClick={() => toggleScreen(screen.id)} aria-label={`Remove ${screen.name}`}>×</button>
+              </article>
+            );
+          }) : (
             <div className="empty-state">Open “Screens” above to add a theatre.</div>
           )}
         </div>
