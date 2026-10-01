@@ -142,13 +142,17 @@ export default function Home() {
   const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
   const [countryOpen, setCountryOpen] = useState(false);
   const [screensOpen, setScreensOpen] = useState(false);
+  const [unitsOpen, setUnitsOpen] = useState(false);
   const countryRef = useRef<HTMLDivElement>(null);
   const screensRef = useRef<HTMLDivElement>(null);
+  const unitsRef = useRef<HTMLDivElement>(null);
   const countryTriggerRef = useRef<HTMLButtonElement>(null);
   const screensTriggerRef = useRef<HTMLButtonElement>(null);
+  const unitsTriggerRef = useRef<HTMLButtonElement>(null);
 
   useDismiss(countryOpen, setCountryOpen, countryRef, countryTriggerRef);
   useDismiss(screensOpen, setScreensOpen, screensRef, screensTriggerRef);
+  useDismiss(unitsOpen, setUnitsOpen, unitsRef, unitsTriggerRef);
 
   const countryScreens = screens.filter((screen) => screen.country === country);
   const selected = selectedIds
@@ -240,8 +244,47 @@ export default function Home() {
             )}
           </div>
 
+          <div className="picker units-picker" ref={unitsRef}>
+            <span className="control-label">02 / Units</span>
+            <button
+              className="picker-trigger"
+              type="button"
+              aria-expanded={unitsOpen}
+              aria-controls="units-menu"
+              onClick={() => setUnitsOpen((open) => !open)}
+              ref={unitsTriggerRef}
+              data-testid="units-trigger"
+            >
+              <span>{unitSystem === "metric" ? "Metric" : "Imperial"}</span>
+              <i aria-hidden="true" />
+            </button>
+            {unitsOpen && (
+              <div className="picker-menu country-menu unit-menu" id="units-menu" aria-label="Measurement units">
+                {([
+                  ["metric", "Metric", "m · m²"],
+                  ["imperial", "Imperial", "ft · ft²"],
+                ] as const).map(([value, label, abbreviation]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={unitSystem === value}
+                    className={unitSystem === value ? "active" : ""}
+                    onClick={() => {
+                      setUnitSystem(value);
+                      setUnitsOpen(false);
+                      unitsTriggerRef.current?.focus();
+                    }}
+                  >
+                    <span>{label}</span>
+                    <small>{abbreviation}</small>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="picker" ref={screensRef}>
-            <span className="control-label">02 / Screens</span>
+            <span className="control-label">03 / Screens</span>
             <button
               className="picker-trigger"
               type="button"
@@ -308,6 +351,7 @@ export default function Home() {
               </div>
             )}
           </div>
+
         </div>
       </section>
 
@@ -324,27 +368,14 @@ export default function Home() {
               </p>
             )}
           </div>
-          <div className="stage-actions">
-            <label className="unit-select">
-              <span>Units</span>
-              <select
-                value={unitSystem}
-                onChange={(event) => setUnitSystem(event.target.value as UnitSystem)}
-                aria-label="Measurement units"
-              >
-                <option value="metric">Metric</option>
-                <option value="imperial">Imperial</option>
-              </select>
-            </label>
-            <button
-              className="clear-button"
-              type="button"
-              onClick={() => setSelectedIds([])}
-              disabled={!selected.length}
-            >
-              Clear all
-            </button>
-          </div>
+          <button
+            className="clear-button"
+            type="button"
+            onClick={() => setSelectedIds([])}
+            disabled={!selected.length}
+          >
+            Clear all
+          </button>
         </div>
 
         <div className="chart">
